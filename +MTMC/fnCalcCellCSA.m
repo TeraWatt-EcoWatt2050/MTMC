@@ -33,44 +33,44 @@ cx = mean(vX);
 cy = mean(vY);
 cz = mean(vZ);  %note that this isn't a 3D mesh - it's a 2D mesh of vertical prisms. We'll use this purely for the element depth
 
-%method using width at the centroid
-% find the gradient of the line that we want, perpendicular to CurrentDir
-g = 1/tan(CurrentDir + pi/2);  %1 over tan because we're measuring from north, not from "east".
-if abs(g) > 1e6 %if CUrrentDir was -pi/2 or pi/2, then g is inf. That causes problems later, so set it to a  big number instead.
-    g = 1e6;    % that's quite big for the gradient of a line. *Really* big (~realmax()) values cause trouble later.
-end
-
-% so y = gx + c. Let's find c, using the point on this line that we know.
-c = cy - (g*cx);
-
-% We can use this to find a couple of points on this line
-% well beyond the mesh element
-lineX = [(cx - 100000) (cx + 100000)]; % This should get us well outside the element edges.
-lineY = lineX .* g + c;
-
-% now find the points where this line intersects the edges of the triangle.
-% Call these points int. This bit is the reason that we require the
-% mapping toolbox.
-% We need to add an extra row to vX, vY, so that it describes a closed
-% polygon and so the line can intersect any edge of the triangle.
-vX(end+1) = vX(1);
-vY(end+1) = vY(1);
-[intX, intY] = polyxpoly(vX, vY, lineX, lineY);
-
-% The length of the line between the two int points will give us the
-% "width" of the mesh element.
-width = sqrt((diff(intX))^2 + (diff(intY))^2);
-
-% We assume that the depth of the cell is z-coordinate for our calculated
-% centroid. FIXME could interpolate better, but more importantly could take
-% account of changing water level! At present this is for MSL.
-depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
-deltaZ = depth / NumLayers;  
-CSA = deltaZ * width;
-
+%% method using width at the centroid
+% % find the gradient of the line that we want, perpendicular to CurrentDir
+% g = 1/tan(CurrentDir + pi/2);  %1 over tan because we're measuring from north, not from "east".
+% if abs(g) > 1e6 %if CUrrentDir was -pi/2 or pi/2, then g is inf. That causes problems later, so set it to a  big number instead.
+%     g = 1e6;    % that's quite big for the gradient of a line. *Really* big (~realmax()) values cause trouble later.
+% end
 % 
-% %%Method integrating algon a line through teh centroid
-% % gradient of line of current direction
+% % so y = gx + c. Let's find c, using the point on this line that we know.
+% c = cy - (g*cx);
+% 
+% % We can use this to find a couple of points on this line
+% % well beyond the mesh element
+% lineX = [(cx - 100000) (cx + 100000)]; % This should get us well outside the element edges.
+% lineY = lineX .* g + c;
+% 
+% % now find the points where this line intersects the edges of the triangle.
+% % Call these points int. This bit is the reason that we require the
+% % mapping toolbox.
+% % We need to add an extra row to vX, vY, so that it describes a closed
+% % polygon and so the line can intersect any edge of the triangle.
+% vX(end+1) = vX(1);
+% vY(end+1) = vY(1);
+% [intX, intY] = polyxpoly(vX, vY, lineX, lineY);
+% 
+% % The length of the line between the two int points will give us the
+% % "width" of the mesh element.
+% width = sqrt((diff(intX))^2 + (diff(intY))^2);
+% 
+% % We assume that the depth of the cell is z-coordinate for our calculated
+% % centroid. FIXME could interpolate better, but more importantly could take
+% % account of changing water level! At present this is for MSL.
+% depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
+% deltaZ = depth / NumLayers;  
+% CSA = deltaZ * width;
+
+
+%% Method integrating algon a line through teh centroid
+% gradient of line of current direction
 % g = 1/tan(CurrentDir);
 % c = cy - (g*cx);
 % lineX = [(cx -100000) (cx + 100000)]; % This should get us well outside the element edges.
@@ -100,60 +100,60 @@ CSA = deltaZ * width;
 % deltaZ = depth / NumLayers;  
 % CSA = deltaZ * meanwidth;
 
-% %% method averaging along 100 lines perpendicular to current direction THROUGHOUT triangle
-% 
-% % find the gradient of the line that we want, perpendicular to CurrentDir
-% g = 1/tan(CurrentDir + pi/2);  %1 over tan because we're measuring from north, not from "east".
-% if abs(g) > 1e6 %if CUrrentDir was -pi/2 or pi/2, then g is inf. That causes problems later, so set it to a  big number instead.
-%     g = 1e6;    % that's quite big for the gradient of a line. *Really* big (~realmax()) values cause trouble later.
-% end
-% 
-% % so y = gx + c. Let's find c for each of the vertices of the triangle.
-% vC = vY - (g.*vX);
-% 
-% % find which vertices have the min and max value of c.
-% 
-% [ minC, minCi ] = min(vC);
-% [ maxC, maxCi ] = max(vC);
-% 
-% % now find lots of values between that
-% C = linspace(minC, maxC, 100);
-% 
-% % for each of the c-values, produce two points to form a line, then look for the intersections with the triangle. The
-% % intersections can't be outside the extents of the vertices of the
-% % triangle, so,
-% 
-% lineX = [ (min(vX)-10000) (max(vX)+10000) ]; %FIXME TEMP BODGE - WILL FAIL ON V LARGE CELLS, ESP WITH NEAR-EAST-WEST CURRENT
-% 
-% % we need to add an extra row to vX and vY, to close the triangle. That
-% % means that the lines will be detected intersecting any side.
-% vX(end+1) = vX(1);
-% vY(end+1) = vY(1);
-% plot(vX,vY);
-% hold on;
-% width = nan(length(C),1);
-% 
-% for p = 1:length(C)
-%     lineY = lineX .* g + C(p);
-%     %plot(lineX, lineY)
-%     [ intX, intY ] = polyxpoly(vX, vY, lineX, lineY);
-%     plot(intX,intY);
-%     switch length(intX)
-%         case 1  %it's at a vertex; only one intersection so width is zero
-%             width(p) = 0;
-%         case 2  %it's not at a vertex. Finite width.
-%             width(p) = sqrt((diff(intX)).^2 + (diff(intY)).^2);
-%         otherwise   %huh? Shouldn't see this.
-%            % error('Unexpected number of intersections between line and triangle.');
-%     end
-% end
-% hold off
-% 
-% depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
-% deltaZ = depth / NumLayers;  
-% CSA = deltaZ * mean(width);
+%% method averaging along 100 lines perpendicular to current direction THROUGHOUT triangle
 
-% %% method calculating area using Heron's Formula and then dividing it by the distance between the extremes of the vertices when projected onto a line parallel to the current direction (and then rooted)
+% find the gradient of the line that we want, perpendicular to CurrentDir
+g = 1/tan(CurrentDir + pi/2);  %1 over tan because we're measuring from north, not from "east".
+if abs(g) > 1e6 %if CUrrentDir was -pi/2 or pi/2, then g is inf. That causes problems later, so set it to a  big number instead.
+    g = 1e6;    % that's quite big for the gradient of a line. *Really* big (~realmax()) values cause trouble later.
+end
+
+% so y = gx + c. Let's find c for each of the vertices of the triangle.
+vC = vY - (g.*vX);
+
+% find which vertices have the min and max value of c.
+
+[ minC, minCi ] = min(vC);
+[ maxC, maxCi ] = max(vC);
+
+% now find lots of values between that
+C = linspace(minC, maxC, 100);
+
+% for each of the c-values, produce two points to form a line, then look for the intersections with the triangle. The
+% intersections can't be outside the extents of the vertices of the
+% triangle, so,
+
+lineX = [ (min(vX)-10000) (max(vX)+10000) ]; %FIXME TEMP BODGE - WILL FAIL ON V LARGE CELLS, ESP WITH NEAR-EAST-WEST CURRENT
+
+% we need to add an extra row to vX and vY, to close the triangle. That
+% means that the lines will be detected intersecting any side.
+vX(end+1) = vX(1);
+vY(end+1) = vY(1);
+plot(vX,vY);
+hold on;
+width = nan(length(C),1);
+
+for p = 1:length(C)
+    lineY = lineX .* g + C(p);
+    %plot(lineX, lineY)
+    [ intX, intY ] = polyxpoly(vX, vY, lineX, lineY);
+    plot(intX,intY);
+    switch length(intX)
+        case 1  %it's at a vertex; only one intersection so width is zero
+            width(p) = 0;
+        case 2  %it's not at a vertex. Finite width.
+            width(p) = sqrt((diff(intX)).^2 + (diff(intY)).^2);
+        otherwise   %huh? Shouldn't see this.
+           % error('Unexpected number of intersections between line and triangle.');
+    end
+end
+hold off
+
+depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
+deltaZ = depth / NumLayers;  
+CSA = deltaZ * mean(width);
+
+%% method calculating area using Heron's Formula and then dividing it by the distance between the extremes of the vertices when projected onto a line parallel to the current direction (and then rooted)
 % 
 % % we need to add an extra row to vX and vY, to close the triangle. 
 % vX(end+1) = vX(1);
