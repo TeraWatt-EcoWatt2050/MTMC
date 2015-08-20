@@ -139,12 +139,14 @@ for p = 1:length(C)
     [ intX, intY ] = polyxpoly(vX, vY, lineX, lineY);
     plot(intX,intY);
     switch length(intX)
+        case 0  %not sure what causes this, but think it's at a vertex and there's perhaps a floating-point error meaning no intersection.
+            width(p) = 0; %FIXME investigate this more, if using this method?!
         case 1  %it's at a vertex; only one intersection so width is zero
             width(p) = 0;
         case 2  %it's not at a vertex. Finite width.
             width(p) = sqrt((diff(intX)).^2 + (diff(intY)).^2);
         otherwise   %huh? Shouldn't see this.
-           % error('Unexpected number of intersections between line and triangle.');
+            error('Unexpected number of intersections between line and triangle.');
     end
 end
 hold off
