@@ -188,6 +188,50 @@ itFilename = [ path '\' filename '_it' num2str(IterationNo) ext ];  %this will p
 clear path filename ext;
 MTMC.fnCreateAlphaDFS0( Turbines, itFilename, NumTSs, TSLength, StartTime, IterationNo );
 
+%% Modify m3fm file to correct speed axis of ct tables u0->ucell
+
+%FIXME this could be made much simpler (and faster) if fnReplaceM3FMSection
+%could work with a file already in memory rather than just one on disc.
+%Would save us loading and saving the m3fm for every turbine.
+%also a function to replace a DHI value, analagous to ReadDHIValue.
+%also, enhance ReadDHIValue to return a second value which is the line
+%number.
+
+%loop through turbines
+for t = 1:NumTurbines
+    % get the lines in the file
+    caTurbine = MTMC.fnExtractM3FMSection(m3fmFilename, [ 'TURBINE_' num2str(t) ]);
+    expression = [ 'minimum_speed' '\s+=\s+(.+)' ]; %search for the key followed by space(s), =, space(s), and grab anything after that.
+    caOut = regexp(caTurbine, expression, 'tokens');   %this will give us a cell array of matches, one per item in caLines.
+    line = find(~cellfun(@isempty, caOut)); % gives us the index of a non-empty cell. NB more than one match = more than one answer.
+    if length(line) > 1
+        error('More than one match');   % FIXME should do something more useful/intelligent here. Will need to think about it.
+    end
+    minspeed_line = line;
+    minspeed_u0 = str2num(caOut{line}{1}{1});
+    
+    expression = [ 'maximum_speed' '\s+=\s+(.+)' ]; %search for the key followed by space(s), =, space(s), and grab anything after that.
+    caOut = regexp(caTurbine, expression, 'tokens');   %this will give us a cell array of matches, one per item in caLines.
+    line = find(~cellfun(@isempty, caOut)); % gives us the index of a non-empty cell. NB more than one match = more than one answer.
+    if length(line) > 1
+        error('More than one match');   % FIXME should do something more useful/intelligent here. Will need to think about it.
+    end
+    maxspeed_line = line;
+    maxspeed_u0 = str2num(caOut{line}{1}{1});
+    
+    if IterationNo == 1
+        a = 1 / Turbines(t).Alpha(end, IterationNo);
+    else
+        a = Turbines(t).Alpha(end, IterationNo - 1) / Turbines(t).Alpha(end, IterationNo);
+    end
+    minspeed_ucell = minspeed_u0 * sqrt(a);
+    maxspeed_ucell = maxspeed_u0 * sqrt(a);
+    
+    %replace the new lines in the file
+    caNewTurbine = [ caTurbine(1:minspeed_line-1); 'minimum_speed = ' num2str(minspeed_ucell); 'maximum_speed = ' num2str(maxspeed_ucell); caTurbine(maxspeed_line+1:end) ];
+    MTMC.fnReplaceM3FMSection(m3fmFilename, [ 'TURBINE_' num2str(t) ], caNewTurbine);
+end
+    
 
 %% Modify m3fm file to point at these dfs0 files
 %for each turbine, create a new "CORRECTION_FACTOR" file section. Store
