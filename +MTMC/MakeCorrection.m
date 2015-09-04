@@ -1,4 +1,4 @@
-%% Master script to do corrections for unknown freestream velocity in a MIKE3 model.
+%% Master function to do corrections for unknown freestream velocity in a MIKE3 model.
 
 % Copyright (C) Simon Waldman / Heriot-Watt University, 2015.
 
@@ -167,7 +167,7 @@ for t = 1:NumTurbines % for each turbine
         NumLayersIntersected = MTMC.fnFindLayersForTurbine(Turbines(t).z, Turbines(t).Diameter, EWT(el).SeabedElevation, NumLayers, EWT(el).DeltaZ(ts, IterationNo));
         
         % calculate nu, which is the proportion of the momentum passing
-        % through the turbine's element that is removed %
+        % through the turbine's element that is removed 
         % FIXME WRONG IF MULTIPLE TURBINES IN CELL
         %   FIXME also this currently ignores Cl.
         nu = ( Cd * Ae / NumLayersIntersected ) / EWT(el).CSA(ts, IterationNo);

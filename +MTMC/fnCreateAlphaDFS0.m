@@ -6,10 +6,10 @@ function [ ] = fnCreateAlphaDFS0( Turbines, filename, NumTSs, TSLength, StartTim
 %   Inputs: Turbines is the Turbines struct used elsewhere.
 %           filename is a char with the path/filename of the dfs0 to
 %           create. If the file already exists, it will be overwritten.
-%           IterationNo is scalar.
-%           NumTSs is obvious.
-%           TSLength is timestep length in seconds.
+%           NumTSs is the number of time steps.
+%           TSLength is the length of a time step in seconds.
 %           StartTime is the time of the first timestep in datevec format.
+%           IterationNo is the iteration number that we are on.
 %   Output: No output. If it fails there should be errors.
 %
 % Copyright (C) Simon Waldman / Heriot-Watt University, 2015.
@@ -44,6 +44,9 @@ end
 %write the file to disc and close it.
 save(dfs0);
 close(dfs0);
+
+%FIXME: there should probably be some error detection in here somewhere re
+%writing the new dfs0.
 
 end
 

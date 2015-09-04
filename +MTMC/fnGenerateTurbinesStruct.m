@@ -67,9 +67,8 @@ for t = 1:NumTurbines   %for each turbine
     % This will make it fast & easy to query in the future.
     
     %The linear and nearest
-    % flags mean linear interpolation within the matrix, but extrapolation by
-    % using the nearest value given. This matches how MIKE
-    % works.
+    % flags mean linear interpolation within the matrix, but extrapolation beyond it by
+    % using the nearest value given. This matches how MIKE works.
     
     Turbines(t).giCd = griddedInterpolant({Speeds, Dirs}, CdTable, 'linear', 'nearest');
     Turbines(t).giCl = griddedInterpolant({Speeds, Dirs}, ClTable, 'linear', 'nearest');
@@ -79,7 +78,7 @@ end
 % now find which mesh element each turbine lies in
 els = pointLocation(trMesh2D, [Turbines.x]', [Turbines.y]');
 %and now I need a way to put the resulting 950x1 array into a new field of
-%the struct. This is a horrific matlabism: first convert to a cell array,
+%the struct. This is a horrific MATLABism: first convert to a cell array,
 %then convert that cell array to a comma-seperated list, and make a
 %comma-seperated list of the target array equal to that.
 tmp = num2cell(els);

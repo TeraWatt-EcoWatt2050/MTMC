@@ -28,7 +28,7 @@ end
 
 %open the file
 dfs0  = dfsTSO(filename);
-NumTSs = get(dfs0,'NumTimeSteps');  %first "timestep" is initial conditions, always zero values, and gives us one more timestep here in the dfs0 than in the config files. Remove it to match.
+NumTSs = get(dfs0,'NumTimeSteps');  %first "timestep" is initial conditions, and gives us one more timestep here in the dfs0 than in the config files. Remove it to match.
 
 % read the item names into a cell array
 caItemnames = get(dfs0, 'itemnames');

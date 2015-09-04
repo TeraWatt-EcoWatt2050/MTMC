@@ -13,11 +13,9 @@ function [ outputCA ] = fnCreateCFSection( Alphadfs0Filename, TurbineNo )
 
 CA = {}; %initialise cell array
 
-%I don't like nested functions fiddling with variables in their parents'
-%scope, but here it does save a lot of typing.
-    function fnAL(line) %the function adds the given line to CA.
-        CA = [ CA; {line} ];
-    end
+function fnAL(line) %the function adds the given line to CA.
+    CA = [ CA; {line} ];
+end
 
 fnAL( '   Touched = 1' );
 fnAL( '   type = 1' );

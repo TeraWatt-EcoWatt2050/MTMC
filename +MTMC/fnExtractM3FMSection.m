@@ -7,7 +7,7 @@ function [ caLines ] = fnExtractM3FMSection( inputname, section_name, multiple )
 %           read, *OR* an existing nx1 cell array of lines from
 %           which a subsection should be extracted.
 %           section_name is a char with the name of the section to extract, not
-%           including the square brackets. Case-sensitive (should be all caps).
+%           including the square brackets. Case-sensitive (usually all caps).
 %           multiple - optional: If this flag is set to 'multiple' then instead
 %           of giving an error when there are multiple sections with the
 %           same name, the function will create a multi-column cell array
@@ -15,7 +15,7 @@ function [ caLines ] = fnExtractM3FMSection( inputname, section_name, multiple )
 %   Output: caLines is a column (nx1) cell array where each cell contains
 %           one line from the section. The section opening and closing
 %           lines will not be included. If the "multiple" keyword is used,
-%           it will be a nxm cell array, where m is the number of sections
+%           it will be a n x m cell array, where m is the number of sections
 %           with the right name.
 
 % Copyright (C) Simon Waldman / Heriot-Watt University, 2015.

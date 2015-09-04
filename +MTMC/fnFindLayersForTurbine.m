@@ -3,8 +3,9 @@ function [ NumLayersIntersected ] = fnFindLayersForTurbine( HubElevation, Diamet
 %intersects.
 %   HubElevation is the elevation of the centre of the turbine with respect
 %   to mean sea level. Metres. Should be negative.
-%   Diameter is obvious. In metres.
-%   SeabedElevation: Elevation of seabed wrt MSL. Ie depth, but negative.
+%   Diameter is the rotor diameter in metres.
+%   SeabedElevation: Elevation of seabed with respect MSL. (i.e. depth, but
+%                   negative)
 %   NumLayers: Number of equal-spaced sigma layers in the model
 %   DeltaZ: Vertical height of each layer. NB not the same as
 %       -SeabedElevation/NumLayers, because water level may not be at MSL.
@@ -41,7 +42,7 @@ LayerBoundaries = SurfaceElevation:-DeltaZ:SeabedElevation;
 % So the boundaries of layer n will be boundaries n and n+1. (top & bottom
 % respectively)
 
-TopLB = max(find(LayerBoundaries > (HubElevation + Diameter / 2) + 2*eps(SeabedElevation))); % have to worry about floating-poitn issues here - so adding tolerance to definitely include equalities in the comparator. From experiment, this seems to be how MIKE works.
+TopLB = max(find(LayerBoundaries > (HubElevation + Diameter / 2) + 2*eps(SeabedElevation))); % have to worry about floating-point issues here - so adding tolerance to definitely include equalities in the comparator. From experiment, this seems to be how MIKE works.
 BottomLB = min(find(LayerBoundaries < (HubElevation - Diameter / 2) - 2*eps(SeabedElevation)));
 
 % So which layer is TopLB the top of, and which is BottomLB the bottom of?
