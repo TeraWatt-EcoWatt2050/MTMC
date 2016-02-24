@@ -6,6 +6,7 @@ Author: Simon Waldman, Heriot-Watt University, 2015.
 See [1] for more information, especially on limitations.
 If you use this package in work that leads to publication, a citation of [1] would be appreciated.
 I would also appreciate hearing about your experience on smw13@hw.ac.uk.
+The latest version of this package may be found at https://github.com/TeraWatt-EcoWatt2050/MTMC
 
 How to install
 ---
