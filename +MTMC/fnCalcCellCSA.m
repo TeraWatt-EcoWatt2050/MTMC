@@ -121,9 +121,72 @@ cz = mean(vZ);  %note that this isn't a 3D mesh - it's a 2D mesh of vertical pri
 % deltaZ = depth / NumLayers;  
 % CSA = deltaZ * TriangleWidth;
 
-%% method averaging width measured by 100 lines normal to the flow, throughout the triangle.
-% This is both method 4 and method 5 in notes, depending if the last few
-% lines use the mean length or the RMS length of the lines.
+% %% method averaging width measured by 100 lines normal to the flow, throughout the triangle.
+% %(Method 4)
+% 
+% NumLines = 100;  % number of places through triangle to average.
+% 
+% % we need to add an extra row to vX and vY, to close the triangle, so we
+% % can treat it as a polygon later.
+% vX(end+1) = vX(1);
+% vY(end+1) = vY(1);
+% 
+% % to make this comprehensible by somebody of little brain such as myself,
+% % we'll rotate the vertices such that the flow is parallel to the y axis.
+% 
+% % find the gradient of a line perpendicular to the flow
+% g = tan(CurrentDir);
+% if abs(g) > 1e6 %if CurrentDir was -pi/2 or pi/2, then g is inf. That causes problems later, so set it to a  big number instead.
+%     g = 1e6;    % that's quite big for the gradient of a line. *Really* big (~realmax()) values cause trouble later.
+% end
+% 
+% R = [ cos(CurrentDir) -sin(CurrentDir); sin(CurrentDir) cos(CurrentDir) ]; %rotating matrix
+% 
+% % let vv be a matrix whose columns are vectors from the origin to each
+% % vertex
+% vv(1,:) = vX;
+% vv(2,:) = vY;
+% 
+% vvR = R * vv;
+% 
+% %find the extremes of the new coordinates
+% minXR = min(vvR(1,:));
+% maxXR = max(vvR(1,:));
+% minYR = min(vvR(2,:));
+% maxYR = max(vvR(2,:));
+% 
+% % matrices for coords of lines to use; Row 1 is start coords, row 2 is end.
+% LineCoordsXR = nan(2,NumLines);
+% LineCoordsYR = nan(2,NumLines);
+% 
+% %divide up the y-extents into the right number of steps
+% LineCoordsYR(1,:) = linspace(minYR, maxYR, NumLines);
+% LineCoordsYR(2,:) = LineCoordsYR(1,:);
+% 
+% %initially, set the x coords at the furthest extents of the triangle
+% LineCoordsXR(1,:) = minXR;
+% LineCoordsXR(2,:) = maxXR;
+% 
+% %find the intersections between these lines and the (rotated) triangle
+% intXR = nan(2,NumLines);
+% intYR = nan(2,NumLines);
+% for n = 1:NumLines
+%     [intXR(:,n), intYR(:,n)] = polyxpoly(vvR(1,:), vvR(2,:), LineCoordsXR(:,n), LineCoordsYR(:,n)); %we know what intYR will be, but hey
+% end
+% 
+% %find the mean lenght of line inside the triangle. We know the lines align
+% %with the x-axes, so can just use one dimension. The first and last lines
+% %will always have length zero (they are at vertices), and these will have
+% %no effect on the model, so exclude these. abs is needed because diff()
+% %makes things negative in rather odd circumstances.
+% 
+% TriangleWidth = mean(abs(diff(intXR(:,2:end-1),1)));
+% depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
+% deltaZ = depth / NumLayers;  
+% CSA = deltaZ * TriangleWidth;
+
+%% method weighted averaging width measured by 100 lines normal to the flow, throughout the triangle, weighting each line by its own length
+%(Method 5)
 
 NumLines = 100;  % number of places through triangle to average.
 
@@ -175,17 +238,17 @@ for n = 1:NumLines
     [intXR(:,n), intYR(:,n)] = polyxpoly(vvR(1,:), vvR(2,:), LineCoordsXR(:,n), LineCoordsYR(:,n)); %we know what intYR will be, but hey
 end
 
-%find the mean lenght of line inside the triangle. We know the lines align
-%with the x-axes, so can just use one dimension. The first and last lines
-%will always have length zero (they are at vertices), and these will have
-%no effect on the model, so exclude these. abs is needed because diff()
+%find the lengths of the lines. abs is needed because diff()
 %makes things negative in rather odd circumstances.
-LineLengths = abs(diff(intXR(:,2:end-1),1));
+LineLengths = abs(diff(intXR,1));
 
-%RMS triangle width
-TriangleWidth = sqrt(mean(LineLengths.^2));
+%Now the weighted mean, where the weights are the lengths themselves
+TriangleWidth = sum(LineLengths.^2) / sum(LineLengths);
+
 depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
 deltaZ = depth / NumLayers;  
 CSA = deltaZ * TriangleWidth;
+
+
 end
 
