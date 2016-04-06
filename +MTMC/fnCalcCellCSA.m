@@ -122,6 +122,8 @@ cz = mean(vZ);  %note that this isn't a 3D mesh - it's a 2D mesh of vertical pri
 % CSA = deltaZ * TriangleWidth;
 
 %% method averaging width measured by 100 lines normal to the flow, throughout the triangle.
+% This is both method 4 and method 5 in notes, depending if the last few
+% lines use the mean length or the RMS length of the lines.
 
 NumLines = 100;  % number of places through triangle to average.
 
@@ -178,8 +180,10 @@ end
 %will always have length zero (they are at vertices), and these will have
 %no effect on the model, so exclude these. abs is needed because diff()
 %makes things negative in rather odd circumstances.
+LineLengths = abs(diff(intXR(:,2:end-1),1));
 
-TriangleWidth = mean(abs(diff(intXR(:,2:end-1),1)));
+%RMS triangle width
+TriangleWidth = sqrt(mean(LineLengths.^2));
 depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
 deltaZ = depth / NumLayers;  
 CSA = deltaZ * TriangleWidth;
