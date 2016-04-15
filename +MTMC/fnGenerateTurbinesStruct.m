@@ -73,6 +73,15 @@ for t = 1:NumTurbines   %for each turbine
     Turbines(t).giCd = griddedInterpolant({Speeds, Dirs}, CdTable, 'linear', 'nearest');
     Turbines(t).giCl = griddedInterpolant({Speeds, Dirs}, ClTable, 'linear', 'nearest');
     
+    % create an empty matrix for the Ctp (Ct prime) values. Ctp is a
+    % pre-calculated thrust coefficient that is corrected to apply to
+    % u_cell rather than u_0.
+    % FIXME to improve accuracy, may want to be able to generate more Ctp
+    % values than there are Cd values. In this case we'll need to pass a
+    % value into this fn to tell it how big to make this matrix.
+    
+    Turbines(t).CtpTable = nan(NumSpeeds, NumDirs);
+    
 end
     
 % now find which mesh element each turbine lies in
