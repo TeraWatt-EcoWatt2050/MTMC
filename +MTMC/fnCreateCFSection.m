@@ -20,7 +20,7 @@ end
 fnAL( '   Touched = 1' );
 fnAL( '   type = 1' );
 fnAL( '   format = 1' ); %this is what specifies the time-varying CF - NOT the next line...
-fnAL( '   constant_value = 1' ); %does this do anything at all?
+fnAL( '   constant_value = 1' ); %this is what the constant Ct value would be if we were using that.
 
 fnAL( [ '   file_name = |' Alphadfs0Filename '|' ] );
 fnAL( [ '   item_number = ' num2str(TurbineNo) ] );

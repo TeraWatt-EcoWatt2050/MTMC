@@ -142,7 +142,7 @@ end
 
 %% Calculate Cts and correction factors
 
-disp('Calculating correction factors...');
+disp('Calculating corrections...');
 for t = 1:NumTurbines %for each turbine
    
     el = find([EWT.ElementNo]==Turbines(t).ElementNo); % find index in EWT for this element.
@@ -230,30 +230,45 @@ end
 
 %% Create dfs0 file with time-varient alpha values for each turbine
 %      (One file with multiple items, item for each turbine)
-disp('Writing dfs0 of correction factors...');  % create a new dfs0 of correction factors for each iteration. Seems safer that way.
+disp('Writing dfs0 of time-varying correction factors...');  % create a new dfs0 of correction factors for each iteration. Seems safer that way.
 [path, filename, ext] = fileparts(Alphadfs0Filename);
 itFilename = [ path '\' filename '_it' num2str(IterationNo) ext ];  %this will probably break if it isn't on Windows. But so will anything that accesses dfs0s.
 clear path filename ext;
 MTMC.fnCreateAlphaDFS0( Turbines, itFilename, NumTSs, TSLength, StartTime, IterationNo );
 
 
-%% Modify m3fm file to point at these dfs0 files
+%% Modify m3fm file to insert new Ct (Ctp) table and point at these dfs0 files
 %for each turbine, create a new "CORRECTION_FACTOR" file section. Store
 %these as columns of a cell array.
-disp('Modifying m3fm file to point to this file...');
+disp('Modifying m3fm file...');
 
 caCFs = cell(11,NumTurbines);
+caTables = cell( 6 + length(Turbines(1).giCtp.GridVectors{1}) * 2, NumTurbines);
+%FIXME WARNING WARNING WARNING this will go wrong if different turbines
+%have different lengths of Ctp tables!!! 
+% Could probably find the turbine with the longest table and use that -
+% don't think MIKE would mind blank lines, though would need to test. Or,
+% could just make sure that all tables are the same length by expanding
+% them to a fixed number of rows rather than a multiple of the original...
+
 for t = 1:NumTurbines
     caCFs(:,t) = MTMC.fnCreateCFSection(itFilename, t);
+    caTables(:,t) = MTMC.fnCreateCtpTableSection(Turbines(t).giCtp);
 end
 
-res = MTMC.fnReplaceM3FMSection(m3fmFilename, 'CORRECTION_FACTOR', caCFs, 'multiple');
+res = MTMC.fnReplaceM3FMSection(m3fmFilename, 'TABLE', caTables, 'multiple');
+if res == -1
+    error('Replacing the correction_factor sections failed.');
+end
+fprintf('Modified %i "TABLE" sections.\n', res);
 
+res = MTMC.fnReplaceM3FMSection(m3fmFilename, 'CORRECTION_FACTOR', caCFs, 'multiple');
 if res == -1
     error('Replacing the correction_factor sections failed.');
 end
 fprintf('Modified %i "CORRECTION_FACTOR" sections.\n', res);
-clear caCFs res t;
+
+clear caCFs caTables res t;
 
 %% Write data file for next iteration
 
