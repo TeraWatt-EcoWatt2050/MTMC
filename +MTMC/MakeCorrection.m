@@ -191,41 +191,41 @@ for t = 1:NumTurbines %for each turbine
 end
 
 
-for t = 1:NumTurbines % for each turbine
-    for ts = 1:NumTSs   %for each timestep (maybe can vectorise this?)
-        
-        elno = Turbines(t).ElementNo;
-        el = find([EWT.ElementNo]==elno);  
-        % find the angle between the current direction and the turbine
-        % orientation (anticlockwise, in radians)
-        %angle = EWT(el).CurrentDirection(ts,IterationNo) - Turbines(t).o;
-        %FIXME for now, assume weathervaning turbines always facing into
-        %flow. When this is fixed, still need to allow for a way to have
-        %weathervaning turbines.
-        angle = 0;  %TEMPORARY.
-        speed = EWT(el).CurrentSpeed(ts, IterationNo);
-        
-        Cd = Turbines(t).giCd(speed, angle); % this will interpolate from the values that we have
-        Cl = Turbines(t).giCl(speed, angle);
-
-        Ae = pi * (Turbines(t).Diameter/2).^2 * cos(angle);   %effective area, viewed from current direction
-        
-        %find how many layers the rotor occupies
-        NumLayersIntersected = MTMC.fnFindLayersForTurbine(Turbines(t).z, Turbines(t).Diameter, EWT(el).SeabedElevation, NumLayers, EWT(el).DeltaZ(ts, IterationNo));
-        
-        % calculate nu, which is the proportion of the momentum passing
-        % through the turbine's element that is removed 
-        % FIXME WRONG IF MULTIPLE TURBINES IN CELL
-        %   FIXME also this currently ignores Cl.
-        nu = ( Cd * Ae / NumLayersIntersected ) / EWT(el).CSA(ts, IterationNo);
-        % calculate alpha, the correction value.
-        alpha = 4 / ( 1 + sqrt( 1 - nu ) ).^2;
-        Turbines(t).Alpha(ts, IterationNo) = alpha;
-        clear nu alpha Cd Cl Ae  angle speed el elno;
-        
-    end
-
-end
+% for t = 1:NumTurbines % for each turbine
+%     for ts = 1:NumTSs   %for each timestep (maybe can vectorise this?)
+%         
+%         elno = Turbines(t).ElementNo;
+%         el = find([EWT.ElementNo]==elno);  
+%         % find the angle between the current direction and the turbine
+%         % orientation (anticlockwise, in radians)
+%         %angle = EWT(el).CurrentDirection(ts,IterationNo) - Turbines(t).o;
+%         %FIXME for now, assume weathervaning turbines always facing into
+%         %flow. When this is fixed, still need to allow for a way to have
+%         %weathervaning turbines.
+%         angle = 0;  %TEMPORARY.
+%         speed = EWT(el).CurrentSpeed(ts, IterationNo);
+%         
+%         Cd = Turbines(t).giCd(speed, angle); % this will interpolate from the values that we have
+%         Cl = Turbines(t).giCl(speed, angle);
+% 
+%         Ae = pi * (Turbines(t).Diameter/2).^2 * cos(angle);   %effective area, viewed from current direction
+%         
+%         %find how many layers the rotor occupies
+%         NumLayersIntersected = MTMC.fnFindLayersForTurbine(Turbines(t).z, Turbines(t).Diameter, EWT(el).SeabedElevation, NumLayers, EWT(el).DeltaZ(ts, IterationNo));
+%         
+%         % calculate nu, which is the proportion of the momentum passing
+%         % through the turbine's element that is removed 
+%         % FIXME WRONG IF MULTIPLE TURBINES IN CELL
+%         %   FIXME also this currently ignores Cl.
+%         nu = ( Cd * Ae / NumLayersIntersected ) / EWT(el).CSA(ts, IterationNo);
+%         % calculate alpha, the correction value.
+%         alpha = 4 / ( 1 + sqrt( 1 - nu ) ).^2;
+%         Turbines(t).Alpha(ts, IterationNo) = alpha;
+%         clear nu alpha Cd Cl Ae  angle speed el elno;
+%         
+%     end
+% 
+% end
 
 
 %% Create dfs0 file with time-varient alpha values for each turbine
