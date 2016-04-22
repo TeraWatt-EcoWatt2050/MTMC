@@ -23,29 +23,41 @@ function [ giCtp ] = fnCalcCtpTable( TurbineStruct, meanElementCSA, modeNumLayer
 
 %FIXME check inputs.
 
-NumCtpSpeeds = length(TurbineStruct.giCd.GridVectors{1}) * RefineFactor;
-MinCtSpeed = TurbineStruct.giCd.GridVectors{1}(1);
-MaxCtSpeed = TurbineStruct.giCd.GridVectors{1}(end);
+%the first thing we need to do is convert the u0 values that we have to
+%u_cell values. We'll calculate the value of alpha to use for this
+%conversion using the value of Ct that corresponds to that u0 value.
+
+u0Values = TurbineStruct.giCd.GridVectors{1};
+CtValues = TurbineStruct.giCd.Values(:,1);
+alphas = MTMC.fnCalcCorrections( 0, modeNumLayersIntersected, CtValues, meanElementCSA, TurbineStruct.Diameter / 2 );
+u_cellValues = u0Values ./ sqrt(alphas');
+clear alphas;
+
+%we'll now form a griddedInterpolant of u_cell vs Ct using spline interpolation, which
+%should give us more accurate intermediate values than linear would.
+angles = TurbineStruct.giCd.GridVectors{2};
+
+giIntermediate = griddedInterpolant( {u_cellValues, angles}, TurbineStruct.giCd.Values, 'spline', 'nearest' );
+
+% MIKE doesn't do fancy interpolation, it always does linear, so we may
+% want to produce a Ctp table with more rows than the Ct table did to
+% improve accuracy. To allow for this, we *now* produce our actual table
+% from giIntermediate and calculate the Ctp values on this.
+
+NumCtpSpeeds = length(giIntermediate.GridVectors{1}) * RefineFactor;
+MinCtSpeed = giIntermediate.GridVectors{1}(1);
+MaxCtSpeed = giIntermediate.GridVectors{1}(end);
 CtpTableSpeeds = linspace(MinCtSpeed, MaxCtSpeed, NumCtpSpeeds);
 
-NumCtpAngles = length(TurbineStruct.giCd.GridVectors{2});
-MinCtAngle = TurbineStruct.giCd.GridVectors{2}(1);
-MaxCtAngle = TurbineStruct.giCd.GridVectors{2}(end);
-CtpTableAngles = linspace(MinCtAngle, MaxCtAngle, NumCtpAngles);
+CtsToCorrect = giIntermediate({CtpTableSpeeds, angles});
 
-[ CtpTableX, CtpTableY ] = meshgrid( CtpTableAngles, CtpTableSpeeds );
+alphas = MTMC.fnCalcCorrections( 0, modeNumLayersIntersected, CtsToCorrect, meanElementCSA, TurbineStruct.Diameter / 2 );
+CtpValues = CtsToCorrect .* alphas;
 
-%FIXME the above is messy and probably slow. Can it be optimised, maybe
-%using the griddedInterpolant more directly instead of the meshgrid step?
-
-CtValues = TurbineStruct.giCd(CtpTableY, CtpTableX);
-
-corrections = MTMC.fnCalcCorrections( 0, modeNumLayersIntersected, CtValues, meanElementCSA, TurbineStruct.Diameter / 2 );
-%FIXME this currently assumes weathervaning turbine - same corrections
-%applied to all directions.
-CtpValues = CtValues .* corrections; %yes, Ctp values *can* be > 1.
-
-giCtp = griddedInterpolant( {CtpTableSpeeds, CtpTableAngles}, CtpValues, 'linear', 'nearest' ); %not the best way of interpolating for this data, but it's what MIKE will do.
+% so we now know the u_cell values and the Ct-prime values for our new
+% table. We'll put that into a griddedInterpolant that uses linear
+% interpolation, the same way as MIKE.
+giCtp = griddedInterpolant( {u_cellValues, angles}, CtpValues, 'linear', 'nearest' );
 
 end
 

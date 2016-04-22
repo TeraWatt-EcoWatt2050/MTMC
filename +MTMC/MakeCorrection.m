@@ -187,6 +187,7 @@ for t = 1:NumTurbines %for each turbine
     TSCtps = Turbines(t).giCtp(speeds, angles);
     Turbines(t).Alpha(:,IterationNo) = DesiredCorrections ./ ( TSCtps ./ TSCts );
     Turbines(t).Alpha(isnan(Turbines(t).Alpha)) = 1;    % there may be a NaA in there if Ct was zero. Change it to a 1 so there's no further correction.  
+    Turbines(t).Alpha = ones(size(Turbines(t).Alpha)); %TEMPORARY disable the second-order correction for now.
     
 end
 
