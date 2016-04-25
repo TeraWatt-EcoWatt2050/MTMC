@@ -13,7 +13,7 @@ function [ SurfElevs ] = fnReadSurfElevDfsu( filename, EWTList )
 % Copyright (C) Simon Waldman / Heriot-Watt University, 2015.
 
 assert(nargin==2, 'Incorrect number of arguments');
-assert(exist(filename, 'file'), 'dfs0 file not found.');
+assert(exist(filename, 'file')==2, 'dfs0 file not found.');
 
 % Set things up for reading dfs files. This requires MIKE Zero to be
 % installed.
@@ -24,13 +24,16 @@ import DHI.Generic.MikeZero.DFS.*;
 dfsu = DfsFileFactory.DfsuFileOpen(filename);
 assert(isa(dfsu, 'DHI.Generic.MikeZero.DFS.dfsu.DfsuFile'), 'Failed to open dfsu file');
 
-Items = fnFindDFSUItems(dfsu);
-ItemNo = Items('Surface Elevation');
+Items = mike_tools.fnFindDFSUItems(dfsu);
+ItemNo = Items('Surface elevation');
 %FIXME check for itemno being nan, or empty, or whatever one gets if it
 %isn't there.
 
-results = fnMIKEReadElementAllTS(dfsu, ItemNo, EWTList);    %this will be a 3D matrix where the middle dimension is a singleton because it accounts for multiple layers but we only have one.
-SurfElevs = reshape(results, size(results,1), size(results,3)); %doing this rather than squeeze means it doesn't break if there's only one element or only one TS.
+results = MTMC.fnMIKEReadElementAllTS(dfsu, ItemNo, EWTList);    %this will be a 3D matrix where the middle dimension is a singleton because it accounts for multiple layers but we only have one.
+%FIXME fnMIKEReadElementAllTS will get moved into mike_tools at some point.
+results = reshape(results, size(results,1), size(results,3)); %doing this rather than squeeze means it doesn't break if there's only one element or only one TS.
+SurfElevs = results';   %this puts things the way round that we want to return
+
 
 end
 

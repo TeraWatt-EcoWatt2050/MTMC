@@ -2,6 +2,10 @@
 
 % Copyright (C) Simon Waldman / Heriot-Watt University, 2015.
 
+% Requires MIKE Zero to be installed on the PC. Requires the DHI Matlab toolbox to be on the path.
+%   Also requires my mike_tools package from https://github.com/TeraWatt-EcoWatt2050/MIKE_tools
+%   The latest version of this package is available at https://github.com/TeraWatt-EcoWatt2050/MTMC
+
 % Inputs:
 %   m3fmFilename = filename of the .m3fm model definition file that will be
 %       read and modified.
@@ -17,8 +21,15 @@
 %       creating new .dfs0 data files containing time-varying correction
 %       factors. This base will have _it1, _it2, etc., appended to signify
 %       different iterations of the script.
+%   SurfElevdfsuFilename = filename of a 2D .dfsu file, output from a prior run of the model,
+%       that contains the "Surface elevation" item and covers the area of all the turbines.
 
-function [] = MakeCorrection( m3fmFilename, matFilename, Turbinedfs0Filenames, meshFilename, Alphadfs0Filename )
+% Outputs:
+%   No outputs in MATLAB. The m3fm file is modified.
+
+function [] = MakeCorrection( m3fmFilename, matFilename, Turbinedfs0Filenames, meshFilename, Alphadfs0Filename, SurfElevdfsuFilename )
+%FIXME could read meshFilename from m3fm.
+%FIXME should group input and output filenames together to rationalise.
 
 
 %% Read or set up data structures
@@ -124,6 +135,17 @@ if CumTurbCount ~= NumTurbines
     error('Number of turbines read from .dfs0 does not match number given in .m3fm.');
 end
 clear CumTurbCount el elno TurbineNums Speeds Directions Drag;
+
+%% Read the surface elevation dfsu and fill in depth and deltaZ from it.
+
+EWTList = [ EWT.ElementNo ];    %this should give us a vector of the element numbers with turbines, in the right order.
+SurfElevs = MTMC.fnReadSurfElevDfsu( SurfElevdfsuFilename, EWTList );
+
+%now we have a matrix with elements as columns as time steps as rows. 
+for a = 1:size(EWTList, 1)
+    EWT(a).Depth(:, IterationNo) = SurfElevs(:,a) - EWT(a).SeabedElevation;
+    EWT(a).DeltaZ(:, IterationNo) = EWT(a).Depth(:, IterationNo) / NumLayers;   %assumes equispaced layers.
+end
 
 %% Calculate element cross-sectional areas, deltaZ, etc. for each EWT on each TS.
 
