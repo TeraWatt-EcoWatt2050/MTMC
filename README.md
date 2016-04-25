@@ -1,12 +1,18 @@
 MTMC (Mike Turbine Mesh Correction) is a MATLAB package for performing a correction to improve the accuracy
 of the modelling of tidal turbines in the MIKE 3 by DHI hydrodynamic modelling suite.
 
-Author: Simon Waldman, Heriot-Watt University, 2015.
+Author: Simon Waldman, Heriot-Watt University, 2015-2016.
 
 See [1] for more information, especially on limitations.
 If you use this package in work that leads to publication, a citation of [1] would be appreciated.
 I would also appreciate hearing about your experience on smw13@hw.ac.uk.
 The latest version of this package may be found at https://github.com/TeraWatt-EcoWatt2050/MTMC
+
+Dependencies:
+---
+* MIKE Zero (or the MIKE SDK) must be installed on the computer.
+* The MIKE Matlab toolbox (from DHI) must be on the Matlab path.
+* The mike_tools package, available at https://github.com/TeraWatt-EcoWatt2050/MIKE_tools
 
 How to install
 ---
