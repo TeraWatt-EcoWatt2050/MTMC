@@ -153,11 +153,9 @@ disp('Calculating cross-sectional areas of mesh elements with turbines in...');
 % for each element with turbine(s) in,
 for el = 1:NumEWT
     for ts = 1:NumTSs   % for each timestep
-        [CSA, Depth, DeltaZ] = MTMC.fnCalcCellCSA(trMesh, EWT(el).ElementNo, EWT(el).CurrentDirection(ts, IterationNo), NumLayers);
+        [CSA] = MTMC.fnCalcCellCSA(trMesh, EWT(el).ElementNo, EWT(el).CurrentDirection(ts, IterationNo), EWT(el).DeltaZ(ts, IterationNo));
         assert(~isnan(CSA), 'CSA returned as NaN. There''s a problem here.');
         EWT(el).CSA(ts, IterationNo) = CSA;
-        EWT(el).Depth(ts) = Depth;
-        EWT(el).DeltaZ(ts) = DeltaZ;
         clear CSA Depth DeltaZ;
     end
 end
