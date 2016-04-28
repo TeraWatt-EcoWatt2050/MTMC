@@ -163,19 +163,25 @@ for t = 1:NumTurbines %for each turbine
 
     %now the table of Ctp values using mean and modal values for CSA and
     %numlayers.
-    [ Turbines(t).giCtp, giu_cellCt ] = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 1, true );
+    [ Turbines(t).giCtp ] = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 1, false );
     %FIXME arrive at good value for that RefineFactor parameter. Maybe 1, maybe
     %(probably) higher. (but it's not used at present anyway!)         
     
         % form 1D vectors (representing timesteps) of the various parameters
-    % that determine the desired corrections, then calculate them.
+    % that determine the desired corrections
             %FIXME for now, assume weathervaning turbines always facing into
         %flow. When this is fixed, still need to allow for a way to have
         %weathervaning turbines.
     angles = zeros(NumTSs, 1); %FIXME will need to relate EWT.CurrentDirection to Turbines.o at some point.
     speeds = EWT(el).CurrentSpeed(:, IterationNo);
     
-    TSCts = giu_cellCt(speeds, angles);
+    %calc a individualised u_cell/Ct table for each timestep
+    for ts = 1:NumTSs
+        [ ~, giu_cellCt ] = MTMC.fnCalcCtpTable( Turbines(t), EWT(el).CSA(ts, IterationNo), NumLayersIntersected(ts), 1, true );     
+        TSCts(ts) = giu_cellCt(speeds(ts), 0);  %FIXME is putting 0 for angle valid?
+    end
+    TSCts = TSCts';
+    
     DesiredCorrections = MTMC.fnCalcCorrections( angles, NumLayersIntersected, TSCts, EWT(el).CSA(:, IterationNo), Turbines(t).Diameter/2 );
     
     %Now, for each timestep, to calculate what the Ctp table will give and
