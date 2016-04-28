@@ -149,34 +149,35 @@ for t = 1:NumTurbines %for each turbine
     
     NumLayersIntersected = MTMC.fnFindLayersForTurbine( Turbines(t).z, Turbines(t).Diameter, EWT(el).SeabedElevation, NumLayers, EWT(el).DeltaZ(:, IterationNo) );
     
-    % form 1D vectors (representing timesteps) of the various parameters
-    % that determine the desired corrections, then calculate them.
-            %FIXME for now, assume weathervaning turbines always facing into
-        %flow. When this is fixed, still need to allow for a way to have
-        %weathervaning turbines.
-    angles = zeros(NumTSs, 1); %FIXME will need to relate EWT.CurrentDirection to Turbines.o.
-    speeds = EWT(el).CurrentSpeed(:, IterationNo);
-    
-    % We will calculate three sets of corrections: First, the exact
-    % correction that we'd like to see on each timestep. Next, the Ctp
+
+    % We will calculate three sets of corrections: First, the Ctp
     % (Ct-prime) table that we'll put in place of the Ct table,
-    % incorporating the mean value for CSA and modal number of layers; and
+    % incorporating the mean value for CSA and modal number of layers; Secondly, the exact
+    % correction that we'd like to see on each timestep (or as close as we can get) and
     % thirdly, a time-varying correction-to-the-correction that deals with
     % when these two diverge.
     % There will be a slight inaccuracy when the sea level or direction is
     % far from the mean; it also won't give the right answers if the
     % correction itself has a significant effect on the surface elevation
     % or current direction - in which case iteration will be needed.
-    
-    TSCts = Turbines(t).giCd(speeds, angles);
-    DesiredCorrections = MTMC.fnCalcCorrections( angles, NumLayersIntersected, TSCts, EWT(el).CSA(:, IterationNo), Turbines(t).Diameter/2 );
-    
+
     %now the table of Ctp values using mean and modal values for CSA and
     %numlayers.
-    Turbines(t).giCtp = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 1 );
-    %FIXME arrive at good value for that last parameter. Maybe 1, maybe
-    %(probably) higher.
-
+    [ Turbines(t).giCtp, giu_cellCt ] = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 1, true );
+    %FIXME arrive at good value for that RefineFactor parameter. Maybe 1, maybe
+    %(probably) higher. (but it's not used at present anyway!)         
+    
+        % form 1D vectors (representing timesteps) of the various parameters
+    % that determine the desired corrections, then calculate them.
+            %FIXME for now, assume weathervaning turbines always facing into
+        %flow. When this is fixed, still need to allow for a way to have
+        %weathervaning turbines.
+    angles = zeros(NumTSs, 1); %FIXME will need to relate EWT.CurrentDirection to Turbines.o at some point.
+    speeds = EWT(el).CurrentSpeed(:, IterationNo);
+    
+    TSCts = giu_cellCt(speeds, angles);
+    DesiredCorrections = MTMC.fnCalcCorrections( angles, NumLayersIntersected, TSCts, EWT(el).CSA(:, IterationNo), Turbines(t).Diameter/2 );
+    
     %Now, for each timestep, to calculate what the Ctp table will give and
     %produce the further correction (Alpha) to reach the value in DesiredCorrections.
     % These differences will be due to changes in surface elevation,
@@ -187,7 +188,7 @@ for t = 1:NumTurbines %for each turbine
     TSCtps = Turbines(t).giCtp(speeds, angles);
     Turbines(t).Alpha(:,IterationNo) = DesiredCorrections ./ ( TSCtps ./ TSCts );
     Turbines(t).Alpha(isnan(Turbines(t).Alpha)) = 1;    % there may be a NaA in there if Ct was zero. Change it to a 1 so there's no further correction.  
-    Turbines(t).Alpha = ones(size(Turbines(t).Alpha)); %TEMPORARY disable the second-order correction for now.
+    %Turbines(t).Alpha = ones(size(Turbines(t).Alpha)); %TEMPORARY disable the second-order correction for now.
     
 end
 
