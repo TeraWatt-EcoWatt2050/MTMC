@@ -138,6 +138,8 @@ clear CumTurbCount el elno TurbineNums Speeds Directions Drag;
 
 %% Read the surface elevation dfsu and fill in depth and deltaZ from it.
 
+disp('Reading surface elevations from previous model run...');
+
 EWTList = [ EWT.ElementNo ];    %this should give us a vector of the element numbers with turbines, in the right order.
 SurfElevs = MTMC.fnReadSurfElevDfsu( SurfElevdfsuFilename, EWTList );
 
