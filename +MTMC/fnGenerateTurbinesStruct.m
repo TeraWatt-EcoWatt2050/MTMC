@@ -27,6 +27,7 @@ Turbines.Diameter = nan;
 Turbines.ElementNo = nan;   %the mesh element that each turbine is in.
 Turbines.Alpha = nan(NumTSs, 1);    % first iteration.
 Turbines.Force = nan(NumTSs, 1);    % first iteration. We don't actually need force for this calculation, but it'll be nice to be able to plot it.
+Turbines.TotalCorrectionApplied = nan(NumTSs, 1);   %first iteration. Don't need this for the calculation, but need it for verifying results by working backwards.
 Turbines = repmat(Turbines, NumTurbines, 1);
 %still need fields for Ct and Cl matrices, but can't preallocate those
 %without knowing the number of speeds and directions, which may vary by
