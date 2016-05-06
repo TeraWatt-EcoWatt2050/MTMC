@@ -27,17 +27,25 @@ function [ giCtp ] = fnCalcCtpTable( TurbineStruct, meanElementCSA, modeNumLayer
 %u_cell values. We'll calculate the value of alpha to use for this
 %conversion using the value of Ct that corresponds to that u0 value.
 
-u0Values = TurbineStruct.giCd.GridVectors{1};
-CtValues = TurbineStruct.giCd.Values;
+Numu0s = length(TurbineStruct.giCd.GridVectors{1}) * RefineFactor;
+Minu0 = TurbineStruct.giCd.GridVectors{1}(1);
+Maxu0 = TurbineStruct.giCd.GridVectors{1}(end);
+u0Values = linspace(Minu0, Maxu0, Numu0s);
+
+angles = TurbineStruct.giCd.GridVectors{2};
+
+CtValues = TurbineStruct.giCd({u0Values, angles});
+
 alphas = MTMC.fnCalcCorrections( 0, modeNumLayersIntersected, CtValues(:,1), meanElementCSA, TurbineStruct.Diameter / 2 );
 u_cellValues = u0Values ./ sqrt(alphas');
 clear alphas;
 
 % temp stuff - simplifying radically to hopefullysee problem
-angles = TurbineStruct.giCd.GridVectors{2};
 alphas = MTMC.fnCalcCorrections( 0, modeNumLayersIntersected, CtValues, meanElementCSA, TurbineStruct.Diameter / 2 );
 CtpValues = CtValues .* alphas;
 giCtp = griddedInterpolant( {u_cellValues, angles}, CtpValues, 'linear', 'nearest' );
+
+
 
 
 % end temp stuff

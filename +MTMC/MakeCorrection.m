@@ -173,7 +173,7 @@ for t = 1:NumTurbines %for each turbine
     
     %now the table of Ctp values using mean and modal values for CSA and
     %numlayers.
-    Turbines(t).giCtp = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 1 );
+    Turbines(t).giCtp = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 4 );
     %FIXME arrive at good value for that last parameter. Maybe 1, maybe
     %(probably) higher.
 
