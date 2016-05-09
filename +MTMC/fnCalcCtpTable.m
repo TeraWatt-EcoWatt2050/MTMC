@@ -1,4 +1,4 @@
-function [ giCtp ] = fnCalcCtpTable( TurbineStruct, meanElementCSA, modeNumLayersIntersected, RefineFactor )
+function [ giCtp, giu_cellCt ] = fnCalcCtpTable( TurbineStruct, meanElementCSA, modeNumLayersIntersected, RefineFactor, outputintermediate )
 %FNCALCCTPTABLE Produces a table of corrected thrust coefficients, called
 %   Ct-prime (Ctp)
 %
@@ -13,10 +13,19 @@ function [ giCtp ] = fnCalcCtpTable( TurbineStruct, meanElementCSA, modeNumLayer
 %                           speeds, etc. Increase to increase correction
 %                           accuracy (because MIKE's linear interpolation 
 %                           isn't great for this application), at the 
-%                           expense of .m3fm file size.
+%                           expense of .m3fm file size. NB not currently
+%                           used.
+%           outputintermediate: Logical. If true then a second output will
+%                           be returned as detailed below, which is
+%                           probably useful only in the original context
+%                           where this is used within MTMC.
 
-%   Outputs:    giCtp:  A griddedInterpolant object with the Ct-prime
-%                        values
+%   Outputs:    giCtp:  A griddedInterpolant object with the
+%                        Ct-prime(u_cell)
+%                        values against u_cell values
+%               giu_cellCt: A griddedInterpolant object with Ct(u0) values
+%                        against u_cell values. Only produced if the
+%                        "outputintermediate" argument is passed.
 
 
 % Copyright (C) Simon Waldman / Heriot-Watt University 2016
@@ -27,25 +36,23 @@ function [ giCtp ] = fnCalcCtpTable( TurbineStruct, meanElementCSA, modeNumLayer
 %u_cell values. We'll calculate the value of alpha to use for this
 %conversion using the value of Ct that corresponds to that u0 value.
 
-Numu0s = length(TurbineStruct.giCd.GridVectors{1}) * RefineFactor;
-Minu0 = TurbineStruct.giCd.GridVectors{1}(1);
-Maxu0 = TurbineStruct.giCd.GridVectors{1}(end);
-u0Values = linspace(Minu0, Maxu0, Numu0s);
-
-angles = TurbineStruct.giCd.GridVectors{2};
-
-CtValues = TurbineStruct.giCd({u0Values, angles});
-
+u0Values = TurbineStruct.giCd.GridVectors{1};
+CtValues = TurbineStruct.giCd.Values;
 alphas = MTMC.fnCalcCorrections( 0, modeNumLayersIntersected, CtValues(:,1), meanElementCSA, TurbineStruct.Diameter / 2 );
 u_cellValues = u0Values ./ sqrt(alphas');
 clear alphas;
 
-% temp stuff - simplifying radically to hopefullysee problem
+% temp stuff - simplifying radically to hopefully see problem
+angles = TurbineStruct.giCd.GridVectors{2};
 alphas = MTMC.fnCalcCorrections( 0, modeNumLayersIntersected, CtValues, meanElementCSA, TurbineStruct.Diameter / 2 );
 CtpValues = CtValues .* alphas;
 giCtp = griddedInterpolant( {u_cellValues, angles}, CtpValues, 'linear', 'nearest' );
 
-
+if outputintermediate
+    giu_cellCt = griddedInterpolant( {u_cellValues, angles}, CtValues, 'linear', 'nearest' );
+else
+    giu_cellCt = [];
+end
 
 
 % end temp stuff

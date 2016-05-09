@@ -168,14 +168,15 @@ for t = 1:NumTurbines %for each turbine
     % correction itself has a significant effect on the surface elevation
     % or current direction - in which case iteration will be needed.
     
-    TSCts = Turbines(t).giCd(speeds, angles);
-    DesiredCorrections = MTMC.fnCalcCorrections( angles, NumLayersIntersected, TSCts, EWT(el).CSA(:, IterationNo), Turbines(t).Diameter/2 );
-    
+
     %now the table of Ctp values using mean and modal values for CSA and
     %numlayers.
-    Turbines(t).giCtp = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 1 );
+    [ Turbines(t).giCtp, giIntermediate ] = MTMC.fnCalcCtpTable( Turbines(t), mean(EWT(el).CSA(:, IterationNo)), mode(NumLayersIntersected), 1, true );
     %FIXME arrive at good value for that last parameter. Maybe 1, maybe
     %(probably) higher.
+    TSCts = giIntermediate(speeds, angles);
+    DesiredCorrections = MTMC.fnCalcCorrections( angles, NumLayersIntersected, TSCts, EWT(el).CSA(:, IterationNo), Turbines(t).Diameter/2 );
+    
 
     %Now, for each timestep, to calculate what the Ctp table will give and
     %produce the further correction (Alpha) to reach the value in DesiredCorrections.
