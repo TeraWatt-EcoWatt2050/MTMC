@@ -26,8 +26,8 @@ MinSpeed = giCtp.GridVectors{1}(1);
 MaxSpeed = giCtp.GridVectors{1}(end);
 
 fnAL( [ '   number_of_directions = ' num2str( NumAngles ) ] );
-fnAL( [ '   minimum_direction = ' num2str( MinAngle ) ] );
-fnAL( [ '   maximum_direction = ' num2str( MaxAngle ) ] );
+fnAL( [ '   minimum_direction = ' num2str( radtodeg(MinAngle) ) ] );
+fnAL( [ '   maximum_direction = ' num2str( radtodeg(MaxAngle) ) ] );
 fnAL( [ '   number_of_speeds = ' num2str( NumSpeeds ) ] );
 fnAL( [ '   minimum_speed = ' num2str( MinSpeed ) ] );
 fnAL( [ '   maximum_speed = ' num2str( MaxSpeed ) ] );
@@ -39,22 +39,21 @@ ToCalc = giCtp( { SpeedsToCalc, AnglesToCalc } );
 
 for a = 1:NumSpeeds
     tmp = sprintf( '   cd_%i =', a );
-    tmp = [ tmp sprintf( ' %6.4f, %6.4f', ToCalc(a, 1:end-1), ToCalc(a, end) ) ];   %this is hard to read, but means we don't get a comma at the end. No \n needed, as fnAL does that.
-%     for b = 1:NumAngles
-%         tmp = [ tmp sprintf( ' %6.4f,', ToCalc(a,b) ) ];
-%     end
-%     tmp = [ tmp sprintf('\b') ];
+    for b = 1:NumAngles-1
+      tmp = [ tmp sprintf( ' %6.4f,', ToCalc(a,b) ) ];
+    end
+    tmp = [ tmp sprintf( ' %6.4f', ToCalc(a, end) ) ];
+    %this way we don't get a comma at the end of the line.
     fnAL( tmp );
 end
 
 %FIXME Cl table will just be populated with zeroes for now.
 for a = 1:NumSpeeds
     tmp = sprintf( '   cl_%i =', a );
-        tmp = [ tmp sprintf( ' %6.4f, %6.4f', 0, 0 ) ]; 
-%     for b = 1:NumAngles
-%         tmp = [ tmp sprintf( ' %6.4f,', 0 ) ];
-%     end
-%     tmp = [ tmp sprintf('\b') ];
+    for b = 1:NumAngles-1
+        tmp = [ tmp sprintf( ' %6.4f,', 0 ) ];
+    end
+    tmp = [ tmp sprintf( ' %6.4f', 0 ) ];
     fnAL( tmp );
 end
 
