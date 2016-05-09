@@ -39,11 +39,11 @@ ToCalc = giCtp( { SpeedsToCalc, AnglesToCalc } );
 
 for a = 1:NumSpeeds
     tmp = sprintf( '   cd_%i =', a );
-    tmp = [ tmp sprintf( ' %6.4f, %6.4f', ToCalc(a, 1:end-1), ToCalc(a, end) ) ];   %this is hard to read, but means we don't get a comma at the end. No \n needed, as fnAL does that.
-%     for b = 1:NumAngles
-%         tmp = [ tmp sprintf( ' %6.4f,', ToCalc(a,b) ) ];
-%     end
-%     tmp = [ tmp sprintf('\b') ];
+    for b = 1:NumAngles-1
+      tmp = [ tmp sprintf( ' %6.4f,', ToCalc(a,b) ) ];
+    end
+    tmp = [ tmp sprintf( ' %6.4f', ToCalc(a, end) ) ];
+    %this way we don't get a comma at the end of the line.
     fnAL( tmp );
 end
 
