@@ -1,4 +1,4 @@
-function [ CSA, depth, deltaZ ] = fnCalcCellCSA( trMesh, ElementNo, CurrentDir, NumLayers )
+function [ CSA ] = fnCalcCellCSA( trMesh, ElementNo, CurrentDir, deltaZ )
 %FNCALCCELLCSA Calculates the cross-sectional area of a mesh cell 
 %              on a plane passing through the centroid of the triangle and
 %              perpendicular to CurrentDir. Also returns the bathymetry for the cell and
@@ -9,14 +9,8 @@ function [ CSA, depth, deltaZ ] = fnCalcCellCSA( trMesh, ElementNo, CurrentDir, 
 %           ElementNo: Element number (in trMesh) to consider
 %           CurrentDir: Direction that the current is flowing *towards*,
 %                       in radians clockwise from north.
-%           NumLayers: Number of sigma layers in the model. Used to find
-%           deltaZ. Assumes equidistant layer spacing in the model.
+%           deltaZ: Height of vertical layers. Assumes equally spaced layers.
 % Outputs:  CSA: Nominal cross-sectional area, in m^2.
-%           depth: Water depth in this horizontal element (positive)
-%           deltaZ: Vertical height of the cell in metres.
-%
-% The depth of the element is assumed to be equal to the mean of the
-% depths at its vertices.
 
 % Copyright (C) Simon Waldman / Heriot-Watt University, 2015.
 
@@ -25,15 +19,17 @@ function [ CSA, depth, deltaZ ] = fnCalcCellCSA( trMesh, ElementNo, CurrentDir, 
 vertices = trMesh.ConnectivityList(ElementNo,:);
 vX = trMesh.Points(vertices, 1);
 vY = trMesh.Points(vertices, 2);
-vZ = trMesh.Points(vertices, 3);
+%  vZ = trMesh.Points(vertices, 3); not actually using this!
 clear vertices;
 
-% find the coordinates of the centroid by taking the mean of the vertices
-cx = mean(vX);
-cy = mean(vY);
-cz = mean(vZ);  %note that this isn't a 3D mesh - it's a 2D mesh of vertical prisms. We'll use this purely for the element depth
 
 %% %% method using width at the centroid
+
+% % find the coordinates of the centroid by taking the mean of the vertices
+% cx = mean(vX);
+% cy = mean(vY);
+% 
+
 % % find the gradient of the line that we want, perpendicular to CurrentDir
 % g = 1/tan(CurrentDir + pi/2);  %1 over tan because we're measuring from north, not from "east".
 % if abs(g) > 1e6 %if CUrrentDir was -pi/2 or pi/2, then g is inf. That causes problems later, so set it to a  big number instead.
@@ -198,12 +194,6 @@ vY(end+1) = vY(1);
 % to make this comprehensible by somebody of little brain such as myself,
 % we'll rotate the vertices such that the flow is parallel to the y axis.
 
-% find the gradient of a line perpendicular to the flow
-g = tan(CurrentDir);
-if abs(g) > 1e6 %if CurrentDir was -pi/2 or pi/2, then g is inf. That causes problems later, so set it to a  big number instead.
-    g = 1e6;    % that's quite big for the gradient of a line. *Really* big (~realmax()) values cause trouble later.
-end
-
 R = [ cos(CurrentDir) -sin(CurrentDir); sin(CurrentDir) cos(CurrentDir) ]; %rotating matrix
 
 % let vv be a matrix whose columns are vectors from the origin to each
@@ -245,8 +235,6 @@ LineLengths = abs(diff(intXR,1));
 %Now the weighted mean, where the weights are the lengths themselves
 TriangleWidth = sum(LineLengths.^2) / sum(LineLengths);
 
-depth = -cz;  % negative because cz was an elevation rather than a depth, thus itself negative
-deltaZ = depth / NumLayers;  
 CSA = deltaZ * TriangleWidth;
 
 
