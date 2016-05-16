@@ -144,7 +144,7 @@ EWTList = [ EWT.ElementNo ];    %this should give us a vector of the element num
 SurfElevs = MTMC.fnReadSurfElevDfsu( SurfElevdfsuFilename, EWTList );
 
 %now we have a matrix with elements as columns as time steps as rows. 
-for a = 1:size(EWTList, 1)
+for a = 1:length(EWTList)
     EWT(a).Depth(:, IterationNo) = SurfElevs(:,a) - EWT(a).SeabedElevation;
     EWT(a).DeltaZ(:, IterationNo) = EWT(a).Depth(:, IterationNo) / NumLayers;   %assumes equispaced layers.
 end
@@ -198,11 +198,11 @@ for t = 1:NumTurbines %for each turbine
     speeds = EWT(el).CurrentSpeed(:, IterationNo);
     
     %calc a individualised u_cell/Ct table for each timestep
+    TSCts = nan(NumTSs, 1);
     for ts = 1:NumTSs
         [ ~, giu_cellCt ] = MTMC.fnCalcCtpTable( Turbines(t), EWT(el).CSA(ts, IterationNo), NumLayersIntersected(ts), 1, true );     
         TSCts(ts) = giu_cellCt(speeds(ts), 0);  %FIXME is putting 0 for angle valid?
     end
-    TSCts = TSCts';
     
     DesiredCorrections = MTMC.fnCalcCorrections( angles, NumLayersIntersected, TSCts, EWT(el).CSA(:, IterationNo), Turbines(t).Diameter/2 );
     
