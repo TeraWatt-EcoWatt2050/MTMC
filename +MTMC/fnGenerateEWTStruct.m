@@ -30,6 +30,11 @@ for e = 1:NumEs
     EWT(e).ElementNo = ElementNos(e);  
     EWT(e).TinE = find([Turbines.ElementNo] == EWT(e).ElementNo);   %which turbines are in this element?
     
+    if length(EWT(e).TinE) > 1
+        warning( 'Element number %i contains %i turbines. Use of more than one turbine per element has not been tested and is likely to give incorrect results.', ...
+            EWT(e).ElementNo, length(EWT(e).TinE) );
+    end
+    
     % what's the seabed elevation in this element? FIXME We'll just take the mean
     % of the vertices for now; a more sophisticated interpolation taking wider info
     % may be possible. Worthwhile???
