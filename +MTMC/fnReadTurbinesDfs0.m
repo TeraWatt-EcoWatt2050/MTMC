@@ -17,6 +17,8 @@ function [ TurbineNums, Speeds, Directions, Drag ] = fnReadTurbinesDfs0( filenam
 %               Drag = tsxn array of drag force where ts = timestep, n =
 %                       turbine number.
 
+% NB Names of turbines must be the default "Turbine 1", "Turbine 2", etc.
+
 % Copyright (C) Simon Waldman / Heriot-Watt University, 2015.
 
 if nargin < 1
