@@ -45,8 +45,6 @@ convergence is reached. This should only be necessary if using a variable thrust
 coefficient (because the flow speed and thrust coefficient both depend on one 
 another).
 
-NB The current version will give incorrect results with a variable thrust coefficient.
-
 Versions used for publications & presentations
 ---
 
